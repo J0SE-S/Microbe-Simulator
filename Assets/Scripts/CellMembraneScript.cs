@@ -12,7 +12,7 @@ public class CellMembraneScript : MonoBehaviour {//sin(i2pi/n) cos(i2pi/n)
     void Start() {
         line = GetComponent<LineRenderer>();
         points = new List<GameObject>();
-        RedrawLine(10);
+        RedrawLine(25);
     }
 
     void Update() {
@@ -24,26 +24,20 @@ public class CellMembraneScript : MonoBehaviour {//sin(i2pi/n) cos(i2pi/n)
     }
 
     void FixedUpdate() {
-        currentArea = CalculateArea();
-        Debug.Log(currentArea);
         for (int i = 0; i < points.Count; i++) {
-            /*Vector2 force = new Vector2(
-                    (points[(int)Mathf.Repeat((i-1), points.Count)].transform.position.x
-                    + points[(int)Mathf.Repeat((i+1), points.Count)].transform.position.x)/2,
-                    (points[(int)Mathf.Repeat((i-1), points.Count)].transform.position.y
-                    + points[(int)Mathf.Repeat((i+1), points.Count)].transform.position.y)/2
-            );*/
-            /*Vector2 direction = new Vector2(
-                    points[(int)Mathf.Repeat((i-1), points.Count)].transform.position.y
-                    -points[(int)Mathf.Repeat((i+1), points.Count)].transform.position.y,
-                    -points[(int)Mathf.Repeat((i-1), points.Count)].transform.position.x
-                    +points[(int)Mathf.Repeat((i-1), points.Count)].transform.position.x
+            points[i].GetComponent<EdgeCollider2D>().points = (
+                    new Vector2[]{
+                    points[(int)Mathf.Repeat((i-1), points.Count)].GetComponent<Rigidbody2D>().position,
+                    points[i].GetComponent<Rigidbody2D>().position,
+                    points[(int)Mathf.Repeat((i+1), points.Count)].GetComponent<Rigidbody2D>().position});
+
+            Vector2 edgeDirection = points[(int)Mathf.Repeat((i+1), points.Count)].transform.position
+                    - points[i].transform.position;
+            Vector2 outwardDirection = Vector2.Perpendicular(
+                    edgeDirection
             );
-            direction.Normalize();*/
-            Vector2 v1 = points[(int)Mathf.Repeat((i+1), points.Count)].transform.position-points[(int)Mathf.Repeat((i-1), points.Count)].transform.position;
-            Vector2 v2 = points[(int)Mathf.Repeat((i), points.Count)].transform.position-points[(int)Mathf.Repeat((i-1), points.Count)].transform.position;
-            Vector2 direction = v2 - (v1 * (Vector2.Dot(v1, v2) / Vector2.Dot(v1, v1)));
-            points[i].GetComponent<Rigidbody2D>().AddForce(direction / (Vector2.Dot(direction, direction) + 0.1f) * -PRESSURE_CONSTANT / currentArea);
+            points[(int)Mathf.Repeat((i+1), points.Count)].GetComponent<Rigidbody2D>().AddForce(outwardDirection*PRESSURE_CONSTANT);
+            points[i].GetComponent<Rigidbody2D>().AddForce(outwardDirection*PRESSURE_CONSTANT*edgeDirection.magnitude);
         }
     }
 
@@ -60,11 +54,17 @@ public class CellMembraneScript : MonoBehaviour {//sin(i2pi/n) cos(i2pi/n)
             points[i].AddComponent<Rigidbody2D>();
             points[i].AddComponent<SpringJoint2D>();
             points[i].AddComponent<SpringJoint2D>();
+            points[i].AddComponent<EdgeCollider2D>();
             SpringJoint2D[] joints = points[i].GetComponents<SpringJoint2D>();
             joints[0].autoConfigureDistance = false;
             joints[1].autoConfigureDistance = false;
             joints[0].dampingRatio = 1;
             joints[1].dampingRatio = 1;
+            joints[0].frequency = 5;
+            joints[1].frequency = 5;
+            joints[0].distance = 1f;
+            joints[1].distance = 1f;
+            points[i].GetComponent<EdgeCollider2D>().points = (new Vector2[]{points[(int)Mathf.Repeat((i-1), points.Count)].transform.position, points[i].transform.position, points[(int)Mathf.Repeat((i+1), points.Count)].transform.position});
             if (i > 0) {
                 joints[0].connectedBody = points[i-1].GetComponent<Rigidbody2D>();
                 points[i-1].GetComponents<SpringJoint2D>()[1].connectedBody = points[i].GetComponent<Rigidbody2D>();
