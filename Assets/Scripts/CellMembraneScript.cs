@@ -27,9 +27,9 @@ public class CellMembraneScript : MonoBehaviour {//sin(i2pi/n) cos(i2pi/n)
         for (int i = 0; i < points.Count; i++) {
             points[i].GetComponent<EdgeCollider2D>().points = (
                     new Vector2[]{
-                    points[(int)Mathf.Repeat((i-1), points.Count)].GetComponent<Rigidbody2D>().position,
-                    points[i].GetComponent<Rigidbody2D>().position,
-                    points[(int)Mathf.Repeat((i+1), points.Count)].GetComponent<Rigidbody2D>().position});
+                    points[(int)Mathf.Repeat((i-1), points.Count)].GetComponent<Rigidbody2D>().position-points[i].GetComponent<Rigidbody2D>().position,
+                    new Vector2(0,0),
+                    points[(int)Mathf.Repeat((i+1), points.Count)].GetComponent<Rigidbody2D>().position-points[i].GetComponent<Rigidbody2D>().position});
 
             Vector2 edgeDirection = points[(int)Mathf.Repeat((i+1), points.Count)].transform.position
                     - points[i].transform.position;
@@ -56,6 +56,7 @@ public class CellMembraneScript : MonoBehaviour {//sin(i2pi/n) cos(i2pi/n)
             points[i].AddComponent<SpringJoint2D>();
             points[i].AddComponent<EdgeCollider2D>();
             SpringJoint2D[] joints = points[i].GetComponents<SpringJoint2D>();
+            points[i].GetComponent<Rigidbody2D>().freezeRotation = true;
             joints[0].autoConfigureDistance = false;
             joints[1].autoConfigureDistance = false;
             joints[0].dampingRatio = 1;
